@@ -1,0 +1,18 @@
+# templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "veeren-leyline.fullname" . }}-binding
+  labels:
+    app.kubernetes.io/name: {{ include "veeren-leyline.name" . }}
+    helm.sh/chart: {{ include "veeren-leyline.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "veeren-leyline.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "veeren-leyline.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
