@@ -26,6 +26,13 @@ def log_request_info():
     app.logger.info(f'{request.remote_addr} - {request.method} - {request.path} - {request.data.decode("utf-8")}')
 
 
+#After each response is sent, this function will log it
+@app.after_request
+def log_response_info(response):
+    app.logger.info(f'Response Status: {response.status_code} - {response.data.decode("utf-8")}')
+    return response
+
+
 
 
 
@@ -99,15 +106,6 @@ table_name = os.getenv('DYNAMODB_TABLE', 'veeren')
 table = dynamodb.Table(table_name)
 
 
-def infinite_counter(start=1):
-    n = start
-    while True:
-        yield n
-        n += 1
-
-counter = infinite_counter(start=1)
-
-
 
 
 
@@ -132,44 +130,76 @@ def validate():
 
 
 # Endpoint to resolve IPv4 addresses
+counter = iter(range(1, 1000000))
+
 @app.route('/v1/tools/lookup', methods=['GET'])
 def lookup():
     domain = request.args.get('domain')
+    
+    # Handle missing domain query parameter (400 Bad Request)
     if not domain:
-        return jsonify({'error': 'Domain parameter is required'}), 400
+        return jsonify({'message': 'Domain parameter is required'}), 400
 
     try:
         # Resolve IPv4 addresses
         answers = dns.resolver.resolve(domain, 'A')
         ipv4_addresses = [rdata.address for rdata in answers]
+    except dns.resolver.NXDOMAIN:
+        #  domain does not exist (404 Not Found)
+        logger.error(f"Domain {domain} not found.")
+        return jsonify({'message': 'Domain not found'}), 404
+    except dns.resolver.NoAnswer:
+        # no A record is found for the domain (404 Not Found)
+        logger.error(f"No A record found for domain {domain}.")
+        return jsonify({'message': 'No A record found for domain'}), 404
     except Exception as e:
+        # Handle other generic errors (500 Internal Server Error)
         logger.error(f"Error resolving domain {domain}: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'message': str(e)}), 500
 
     if ipv4_addresses:
-        # Generate the next entry number
-        entry_number = next(counter)
+        # Generate the next entry number (queryID)
+        queryID = next(counter)
+        
+        # Get the client's IP address (assuming request has a 'REMOTE_ADDR' header)
+        client_ip = request.remote_addr or '0.0.0.0'
+
+        # Capture the current timestamp (epoch time)
+        created_time = int(time.time())
 
         # Log successful query to DynamoDB
         log_entry = {
-            'entry_number': str(entry_number),
+            'queryID': queryID,
             'domain': domain,
-            'ipv4_addresses': ipv4_addresses
+            'client_ip': client_ip,
+            'created_time': created_time,
+            'addresses': [{'ip': ip, 'queryID': queryID} for ip in ipv4_addresses]
         }
 
         try:
             # Insert the log entry into DynamoDB
             table.put_item(Item=log_entry)
             logger.info(f"Successfully resolved domain {domain}: {ipv4_addresses}")
-            return jsonify({'domain': domain, 'ipv4_addresses': ipv4_addresses, 'entry_number': entry_number})
+            
+            # Prepare the response
+            response = {
+                'domain': domain,
+                'addresses': [{'ip': ip, 'queryID': queryID} for ip in ipv4_addresses],
+                'client_ip': client_ip,
+                'created_time': created_time,
+                'queryID': queryID
+            }
+            
+            return jsonify(response), 200
         except (NoCredentialsError, PartialCredentialsError):
             logger.error("AWS credentials not found.")
-            return jsonify({'error': 'AWS credentials not found'}), 500
+            return jsonify({'message': 'AWS credentials not found'}), 500
         except Exception as e:
             logger.error(f"Error inserting log entry into DynamoDB: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'message': str(e)}), 500
     else:
-        return jsonify({'domain': domain, 'ipv4_addresses': []})
+        return jsonify({'message': 'No IP addresses found for the domain'}), 404
+
 
 
 
@@ -177,18 +207,31 @@ def lookup():
 @app.route('/v1/history', methods=['GET'])
 def queries():
     try:
-       
+        # Fetch all items from the DynamoDB table
         response = table.scan()
-        items = response['Items']
+        items = response.get('Items', [])
         
-        # Convert entry_number to an integer for sorting and get last 20 entries
-        items = sorted(items, key=lambda x: int(x['entry_number']), reverse=True)
-        last_20_items = items[:20]
+        # Sort the items by 'queryID' (which is the 'entry_number') and get the last 20 entries
+        sorted_items = sorted(items, key=lambda x: int(x['queryID']), reverse=True)
+        last_20_items = sorted_items[:20]
 
-        return jsonify(last_20_items)
+        # Format the last 20 items to match the required response format
+        formatted_items = []
+        for item in last_20_items:
+            formatted_item = {
+                'domain': item['domain'],
+                'addresses': [{'ip': addr['ip'], 'queryID': int(addr['queryID'])} for addr in item.get('addresses', [])],
+                'client_ip': item.get('client_ip', '0.0.0.0'),
+                'created_time': int(item.get('created_time', 0)),
+                'queryID': int(item['queryID'])
+            }
+            formatted_items.append(formatted_item)
+
+        return jsonify(formatted_items)
     except Exception as e:
         logger.error(f"Error fetching queries: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 
 
