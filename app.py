@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request, Response
 from prometheus_client import Counter, generate_latest, CollectorRegistry, CONTENT_TYPE_LATEST
 from logging.handlers import RotatingFileHandler
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+from threading import Lock
 
 
 
@@ -10,6 +11,11 @@ app = Flask(__name__)
 
 
 ## Setup access logs 
+
+#Logging initialize
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 handler = RotatingFileHandler('access.log', maxBytes=10000, backupCount=3)
 handler.setLevel(logging.INFO)
@@ -20,26 +26,39 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
-#Before each request is executed by the routes, this function will log it.
+
+active_requests = 0
+request_lock = Lock()
+shutdown_in_progress = False
+
+
+#Before each request is executed by the routes, this function will log it. 
+
 @app.before_request
-def log_request_info():
+def track_active_requests():
+    global active_requests, shutdown_in_progress
+    if shutdown_in_progress and request.path != "/shutdown":
+        # If shutdown is in progress, reject new requests (except for /shutdown)
+        return jsonify({"message": "We are shutting down the server for maintenance. Please try again later."}), 503
+    
+    with request_lock:
+        active_requests += 1
     app.logger.info(f'{request.remote_addr} - {request.method} - {request.path} - {request.data.decode("utf-8")}')
+    app.logger.info(f'Active requests count increased: {active_requests}')
 
-
-#After each response is sent, this function will log it
 @app.after_request
-def log_response_info(response):
+def track_finished_requests(response):
+    global active_requests
+    if request.path == "/shutdown":
+        return response
+    
+    with request_lock:
+        active_requests -= 1
     app.logger.info(f'Response Status: {response.status_code} - {response.data.decode("utf-8")}')
+    app.logger.info(f'Active requests count decreased: {active_requests}')
     return response
 
 
-
-
-
-# Error handler for bad requests
-@app.errorhandler(400)
-def bad_request(error):
-    return jsonify({"message": "You have sent a bad request, please verify the API parameters"}), 400
 
 
 #Following function is to support the /metrics route
@@ -88,15 +107,6 @@ def root():
         "kubernetes": is_kubernetes
     }
     return jsonify(response)
-
-
-
-
-#Logging initialize
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
 
 
 #Setup Dynamodb
@@ -235,14 +245,35 @@ def queries():
 
 
 
+# use this endpoint to gracefully shutdown the app
+
+
+
+
 
 @app.route("/shutdown")
 def shutdown():
-    # this mimics a CTRL+C hit by sending SIGINT
-    # it ends the app run, but not the main thread
-    pid = os.getpid()
-    os.kill(pid, signal.SIGINT)
-    return "Shutting down application", 200
+    global active_requests, shutdown_in_progress
+    with request_lock:
+        shutdown_in_progress = True
+        if active_requests > 0:
+            app.logger.info(f"Cannot shut down, active requests in progress: {active_requests}")
+            return jsonify({
+                "message": "Cannot shut down, active requests in progress",
+                "active_requests": active_requests
+            }), 400
+
+        app.logger.info("No active requests, shutting down the application.")
+        
+        # Perform any necessary cleanup operations before shutdown
+
+        # Give some time for the server to stop accepting new requests
+        time.sleep(2)  # Adjust as needed for cleanup operations
+
+        # Send SIGTERM for graceful shutdown
+        os.kill(os.getpid(), signal.SIGTERM)
+        
+        return "Shutting down application", 200
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0', port=3000)
