@@ -56,13 +56,13 @@ Basic is hosted on master branch and advanced is hosted on develop branch.
 - Terraform for EC2 for Jenkins and EKS 
 - FluxCD
 
-#####  Since I have used CI/CD tool as Jenkins, we will require a EC2 machine. I have provided a terraform configuration inside `/veeren-leyline/terraform/ec2` for it.
+Since I have used CI/CD tool as Jenkins, we will require a EC2 machine. I have provided a terraform configuration inside `/veeren-leyline/terraform/ec2` for it.
 
-##### Since we will also require a kubernetes cluster, I have provided a sample terraform file for creating a AWS EKS cluster. The terraform configuration is inside `/veeren-leyline/terraform/eks`
+Since we will also require a kubernetes cluster, I have provided a sample terraform file for creating a AWS EKS cluster. The terraform configuration is inside `/veeren-leyline/terraform/eks`
 
-##### Along with EKS cluster provisioning, we will also install FluxCD in the cluster, as I prefer GitOps with FluxCD for Kubernetes related deployment. 
+Along with EKS cluster provisioning, we will also install FluxCD in the cluster, as I prefer GitOps with FluxCD for Kubernetes related deployment. 
 
-##### Please note that I have simply installed the Flux Operators on the clusters and the Source definitions and configurations are pending as this is a good to have in an assignment limited by time.
+Please note that I have simply installed the Flux Operators on the clusters and the Source definitions and configurations are pending as this is a good to have in an assignment limited by time.
 
 
 
