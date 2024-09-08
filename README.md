@@ -11,7 +11,7 @@ Basic is hosted on master branch and advanced is hosted on develop branch.
 - ✅ **Docker Compose**: A `docker-compose.yml` file is provided to manage multi-container Docker applications.
 - ✅ **Docker Hub**: The pre-built Docker image is available on [Docker Hub](https://hub.docker.com/r/veeren03/veeren-leyline).
 - ✅ **Helm Chart**: A Helm chart is available for deploying the application in Kubernetes.
-- ✅ **Helm Chart**: Jenkinsfile is added to deploy the app to AWS EKS cluster via Helm chart.
+- ✅ **Jenkinsfile**: Jenkinsfile is added to deploy the app to AWS EKS cluster via Helm chart.
 
 
 
