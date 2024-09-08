@@ -41,7 +41,7 @@ pipeline {
                     cd veeren-leyline
                     ls
                     helm lint veeren-leyline
-                    helm template
+                    helm template release1 veeren-leyline 
 
                     '''
                 }
@@ -74,12 +74,6 @@ pipeline {
 
       
     }
-    post {
-        always {
-            script {
-                shared_functions.sendSlackNotification(currentBuild.result, "$SLACK_CHANNELS")
-            }
-        }
-    }
+
 }
 
