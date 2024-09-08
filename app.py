@@ -264,13 +264,6 @@ def shutdown():
             }), 400
 
         app.logger.info("No active requests, shutting down the application.")
-        
-        # Perform any necessary cleanup operations before shutdown
-
-        # Give some time for the server to stop accepting new requests
-        time.sleep(2)  # Adjust as needed for cleanup operations
-
-        # Send SIGTERM for graceful shutdown
         os.kill(os.getpid(), signal.SIGTERM)
         
         return "Shutting down application", 200
