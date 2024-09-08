@@ -5,7 +5,7 @@ flux check --pre
 flux bootstrap github \
   --owner=$GITHUB_USER \
   --repository=veeren-leyline \
-  --branch=main \
+  --branch=master \
   --path=./clusters/my-cluster \
   --components source-controller,kustomize-controller,helm-controller,notification-controller
 

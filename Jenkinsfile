@@ -21,12 +21,13 @@ pipeline {
         stage('Docker build and push') {
             steps {
                 script {
+                    def app_version = params.app_version
                     sh '''
-
+                    
                     cd veeren-leyline
                     ls
-                    docker build . -t veeren03/veeren-leylein:latest
-                    docker push veeren03/veeren-leyline:latest
+                    docker build . -t veeren03/veeren-leylein:$app_version
+                    docker push veeren03/veeren-leyline:$app_version
                     
                     '''
                 }
@@ -49,7 +50,7 @@ pipeline {
         stage('Get kubeconfig and Helm apply') {
             steps {
                 script {
-
+                    def app_version = params.app_version
 
                     sh '''
                     cd veeren-leyline
@@ -59,9 +60,11 @@ pipeline {
                     export AWS_SECRET_ACCESS_KEY=$(echo $SECRET | jq -r '.AWS_SECRET_ACCESS_KEY')
                     eksctl utils write-kubeconfig --cluster my-cluster --region us-east-1
 
-                    helm install release1 veeren-leyline \
+                    helm upgrade release1 veeren-leyline \
                     --set secrets.awsAccessKeyId="`echo -n $AWS_ACCESS_KEY_ID`" \
                     --set secrets.awsSecretAccessKey="`echo -n $AWS_SECRET_ACCESS_KEY`"
+                    --set image.tag=$app_version \
+                    --set version=$app_version
 
                     '''
                 }
