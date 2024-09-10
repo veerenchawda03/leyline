@@ -62,7 +62,7 @@ pipeline {
 
                     helm upgrade release1 veeren-leyline \
                     --set secrets.awsAccessKeyId="`echo -n $AWS_ACCESS_KEY_ID`" \
-                    --set secrets.awsSecretAccessKey="`echo -n $AWS_SECRET_ACCESS_KEY`"
+                    --set secrets.awsSecretAccessKey="`echo -n $AWS_SECRET_ACCESS_KEY`" \
                     --set image.tag=$app_version \
                     --set version=$app_version
 
