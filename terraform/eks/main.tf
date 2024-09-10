@@ -65,7 +65,7 @@ module "eks" {
 
 resource "null_resource" "install_flux" {
   provisioner "local-exec" {
-    command = "bash /path/to/your-script.sh"
+    command = "bash /install-flux.sh"
   }
 
   # This ensures the EKS module runs first before the script executes
