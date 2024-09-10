@@ -74,12 +74,6 @@ pipeline {
 
       
     }
-    post {
-        always {
-            script {
-                shared_functions.sendSlackNotification(currentBuild.result, "$SLACK_CHANNELS")
-            }
-        }
-    }
+
 }
 
