@@ -5,9 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: veeren03/veeren-leyline
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  repository: 105120282563.dkr.ecr.ap-south-1.amazonaws.com/veeren-leyline
+  pullPolicy: Always
   tag: "latest"
 
 imagePullSecrets: []
