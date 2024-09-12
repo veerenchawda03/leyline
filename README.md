@@ -42,10 +42,17 @@ Basic is hosted on master branch and advanced is hosted on develop branch.
 - You will require a Kubernetes cluster in any cloud/docker desktop. I have assumed a cluster AWS EKSnamed `my-cluster` in region `us-east-1` for Jenkinsfile sake.
 - Configure your own cluster credentials on local if not AWS. If using docker desktop, simply enable Kubernetes from the docker desktop settings. Reference https://docs.docker.com/desktop/kubernetes/
 - If AWS, Download the kubeconfig on local machine using example command `eksctl utils write-kubeconfig --cluster <cluster-name> --region <region>`
+- Execute the following commands to install helm chart on local machine. Install AWS CLI https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 - cd into the git directory, outside the helm chart named  `veeren-leyline`
-- Execute this command --- ``` helm install release1 veeren-leyline \
+
+
+1. ```export AWS_ACCESS_KEY_ID='<sent in email>' ```
+2. ```export AWS_SECRET_ACCESS_KEY='<sent in email>'```
+3. ```aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/j2c9s1t6```
+4.  Now we install the chart with this command --- ``` helm install release1 veeren-leyline \
                     --set secrets.awsAccessKeyId="`echo -n $AWS_ACCESS_KEY_ID`" \
                     --set secrets.awsSecretAccessKey="`echo -n $AWS_SECRET_ACCESS_KEY`" ```
+5. Port forward to the service ``` kubectl port-forward service/release1-veeren-leyline 3000:80 ```
 
 
  
