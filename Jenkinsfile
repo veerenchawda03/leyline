@@ -60,6 +60,8 @@ pipeline {
                     export AWS_SECRET_ACCESS_KEY=$(echo $SECRET | jq -r '.AWS_SECRET_ACCESS_KEY')
                     eksctl utils write-kubeconfig --cluster my-cluster --region us-east-1
 
+                    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/j2c9s1t6
+                    
                     helm upgrade release1 veeren-leyline \
                     --set secrets.awsAccessKeyId="`echo -n $AWS_ACCESS_KEY_ID`" \
                     --set secrets.awsSecretAccessKey="`echo -n $AWS_SECRET_ACCESS_KEY`" \
