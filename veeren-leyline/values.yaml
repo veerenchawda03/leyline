@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: 105120282563.dkr.ecr.ap-south-1.amazonaws.com/veeren-leyline
+  repository: public.ecr.aws/j2c9s1t6/veeren-leyline
   pullPolicy: Always
   tag: "latest"
 
