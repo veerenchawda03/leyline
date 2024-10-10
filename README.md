@@ -57,6 +57,8 @@ helm install release1 veeren-leyline \
   --set secrets.awsSecretAccessKey="$AWS_SECRET_ACCESS_KEY"
 ```
 5. Port forward to the service ``` kubectl port-forward service/release1-veeren-leyline 3000:80 ```
+6. DONOT close the terminal tab where the port forward is running
+7. Navigate to localhost:3000 to use the application
 
 
  
