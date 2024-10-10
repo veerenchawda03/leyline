@@ -21,6 +21,7 @@ Basic is hosted on master branch and advanced is hosted on develop branch.
 - Install and open Docker on local machine
 - Run this command to check if any other app is using port 3000 ` netstat -vanp tcp | grep 3000`. Kill that process since our app is also going to run on port 3000
 - You will require my AWS credentials, as the database is AWS DynamoDB. I am sharing with you on email and steps to use it as env variables.
+- Use the AWS KEYS shared over email.
 - Run `docker-compose up -d --build `. This will run the docker image with tag `latest`. I have pushed the latest code inside the docker from my local machine for you to test.
 - Run `docker ps` to check if container has started.
 
