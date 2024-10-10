@@ -50,10 +50,12 @@ Basic is hosted on master branch and advanced is hosted on develop branch.
 1. ```export AWS_ACCESS_KEY_ID='<sent in email>' ```
 2. ```export AWS_SECRET_ACCESS_KEY='<sent in email>'```
 3. ```aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/j2c9s1t6```
-4.  Now we install the chart with this command --- ``` helm install release1 veeren-leyline \
+4. Now we install the chart with this command 
+```bash
+helm install release1 veeren-leyline \
   --set secrets.awsAccessKeyId="$AWS_ACCESS_KEY_ID" \
   --set secrets.awsSecretAccessKey="$AWS_SECRET_ACCESS_KEY"
- ```
+```
 5. Port forward to the service ``` kubectl port-forward service/release1-veeren-leyline 3000:80 ```
 
 
